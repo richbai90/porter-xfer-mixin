@@ -1,0 +1,4 @@
+bin
+.cnab
+*-packr.go
+.DS_Store

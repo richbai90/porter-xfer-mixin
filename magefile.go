@@ -4,16 +4,10 @@
 package main
 
 import (
-	"io"
 	"os"
-	"path"
 
-	"get.porter.sh/porter/mage/mixins"
-	"get.porter.sh/porter/mage/releases"
-
-	// Import common targets that all mixins should expose to the user
-	// mage:import
-	_ "get.porter.sh/porter/mage"
+	"get.porter.sh/magefiles/mixins"
+	"get.porter.sh/magefiles/releases"
 )
 
 const (
@@ -27,19 +21,6 @@ var magefile = mixins.NewMagefile(mixinPackage, mixinName, mixinBin)
 // Build the mixin
 func Build() {
 	magefile.Build()
-	xferbin := "./xfer-bin"
-	source, err := os.Open(xferbin)
-	if err != nil {
-		return
-	}
-	defer source.Close()
-
-	destination, err := os.Create(path.Join(mixinBin, "xfer-bin"))
-	if err != nil {
-		return
-	}
-	defer destination.Close()
-	io.Copy(destination, source)
 }
 
 // Cross-compile the mixin before a release

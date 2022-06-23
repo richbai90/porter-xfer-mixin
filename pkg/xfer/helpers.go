@@ -9,7 +9,7 @@ import (
 	"strings"
 	"testing"
 
-	"get.porter.sh/porter/pkg/context"
+	context "get.porter.sh/porter/pkg/portercontext"
 	"github.com/carolynvs/aferox"
 	"github.com/spf13/afero"
 )

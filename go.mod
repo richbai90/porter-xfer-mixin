@@ -1,4 +1,4 @@
-module get.porter.sh/mixin/skeletor
+module github.com/richbai90/xfer
 
 go 1.17
 
@@ -13,7 +13,9 @@ replace (
 
 require (
 	get.porter.sh/porter v1.0.0-alpha.7
+	github.com/carolynvs/aferox v0.3.0
 	github.com/ghodss/yaml v1.0.0
+	github.com/spf13/afero v1.5.1
 	github.com/spf13/cobra v1.1.3
 	github.com/stretchr/testify v1.7.0
 	github.com/xeipuuv/gojsonschema v1.2.0
@@ -29,7 +31,6 @@ require (
 	github.com/PuerkitoBio/goquery v1.5.0 // indirect
 	github.com/andybalholm/brotli v1.0.0 // indirect
 	github.com/andybalholm/cascadia v1.0.0 // indirect
-	github.com/carolynvs/aferox v0.3.0 // indirect
 	github.com/carolynvs/magex v0.6.0 // indirect
 	github.com/cbroglie/mustache v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.1.1 // indirect
@@ -78,7 +79,6 @@ require (
 	github.com/qri-io/jsonpointer v0.1.1 // indirect
 	github.com/qri-io/jsonschema v0.2.2-0.20210723092138-2eb22ee8115f // indirect
 	github.com/sirupsen/logrus v1.8.1 // indirect
-	github.com/spf13/afero v1.5.1 // indirect
 	github.com/spf13/cast v1.3.1 // indirect
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect

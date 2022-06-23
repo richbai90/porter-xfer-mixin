@@ -1,6 +1,8 @@
 package xfer
 
 import (
+	"fmt"
+
 	"get.porter.sh/porter/pkg/exec/builder"
 )
 
@@ -82,8 +84,10 @@ func (a *Actions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		for _, result := range action {
 			s := result.(*[]Step)
 			if actionName == "install" {
-				step := (*s)[0]
-				s = generateSteps(step)
+				// Currently only one step in a xfer action
+				generateInstallSteps(&(*s)[0].Instruction)
+			} else {
+				s = generateVoidSteps(actionName)
 			}
 			*a = append(*a, Action{
 				Name:  actionName,
@@ -93,6 +97,7 @@ func (a *Actions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	}
 	return nil
 }
+
 
 var _ builder.HasOrderedArguments = Instruction{}
 var _ builder.ExecutableStep = Instruction{}
@@ -176,16 +181,22 @@ func (o Output) GetRegex() string {
 	return o.Regex
 }
 
-func generateSteps(s Step) *[]Step {
+func generateVoidSteps(stepName string) *[]Step {
 	var steps []Step
-
-	steps = append(steps,
+	steps = append(
+		steps,
 		Step{
-			Instruction: Instruction{
-				Command:   "/cnab/app/mixins/xfer/runtimes/xfer-bin",
-				Arguments: []string{"restore", "--source", "/backup"},
+			Instruction{
+				Command:        "echo",
+				Arguments:      []string{fmt.Sprintf("Nothing to do for %s", stepName)},
+				SuppressOutput: true,
 			},
-		})
-
+		},
+	)
 	return &steps
+}
+
+func generateInstallSteps(instruction *Instruction) {
+	instruction.Command = "/cnab/app/mixins/xfer/xfer-bin"
+	instruction.Arguments = []string{"restore", "--source", "/backup", "--destination", instruction.Destination}
 }

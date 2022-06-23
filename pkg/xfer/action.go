@@ -182,8 +182,8 @@ func generateSteps(s Step) *[]Step {
 	steps = append(steps,
 		Step{
 			Instruction: Instruction{
-				Command:   "bin/mixins/xfer",
-				Arguments: []string{"volume"},
+				Command:   "/cnab/app/mixins/xfer/runtimes/xfer-bin",
+				Arguments: []string{"restore", "--source", "/backup"},
 			},
 		})
 

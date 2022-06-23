@@ -4,7 +4,9 @@
 package main
 
 import (
+	"io"
 	"os"
+	"path"
 
 	"get.porter.sh/porter/mage/mixins"
 	"get.porter.sh/porter/mage/releases"
@@ -25,6 +27,19 @@ var magefile = mixins.NewMagefile(mixinPackage, mixinName, mixinBin)
 // Build the mixin
 func Build() {
 	magefile.Build()
+	xferbin := "./xfer-bin"
+	source, err := os.Open(xferbin)
+	if err != nil {
+		return
+	}
+	defer source.Close()
+
+	destination, err := os.Create(path.Join(mixinBin, "xfer-bin"))
+	if err != nil {
+		return
+	}
+	defer destination.Close()
+	io.Copy(destination, source)
 }
 
 // Cross-compile the mixin before a release
@@ -45,7 +60,7 @@ func Test() {
 func Publish() {
 	// You can test out publishing locally by overriding PORTER_RELEASE_REPOSITORY and PORTER_PACKAGES_REMOTE
 	if _, overridden := os.LookupEnv(releases.ReleaseRepository); !overridden {
-		os.Setenv(releases.ReleaseRepository, "github.com/YOURNAME/YOURREPO")
+		os.Setenv(releases.ReleaseRepository, "github.com/richbai90/xfer")
 	}
 	magefile.PublishBinaries()
 

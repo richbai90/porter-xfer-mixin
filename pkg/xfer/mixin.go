@@ -2,7 +2,7 @@
 package xfer
 
 import (
-	"get.porter.sh/porter/pkg/context"
+	context "get.porter.sh/porter/pkg/portercontext"
 )
 
 const defaultClientVersion string = "v0.0.0"

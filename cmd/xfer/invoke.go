@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func buildInvokeCommand(m *xfer.Mixin) *cobra.Command {
+func BuildInvokeCommand(m *xfer.Mixin) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "invoke",
 		Short: "Execute the invoke functionality of this mixin",

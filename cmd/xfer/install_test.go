@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Test_buildInstallCommand(t *testing.T) {
+func Test_BuildInstallCommand(t *testing.T) {
 	type args struct {
 		m *xfer.Mixin
 	}
@@ -31,10 +31,10 @@ func Test_buildInstallCommand(t *testing.T) {
 				t.FailNow()
 			}
 			tt.args.m.Context.In = file
-			cmd := buildInstallCommand(tt.args.m)
+			cmd := BuildInstallCommand(tt.args.m)
 			cmd.Execute()
-			if got := buildInstallCommand(tt.args.m); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("buildInstallCommand() = %v, want %v", got, tt.want)
+			if got := BuildInstallCommand(tt.args.m); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("BuildInstallCommand() = %v, want %v", got, tt.want)
 			}
 		})
 	}

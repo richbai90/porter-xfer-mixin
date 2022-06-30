@@ -8,7 +8,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func Test_buildBuildCommand(t *testing.T) {
+func Test_BuildBuildCommand(t *testing.T) {
 	type args struct {
 		m *xfer.Mixin
 	}
@@ -26,18 +26,18 @@ func Test_buildBuildCommand(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			file, err := tt.args.m.FileSystem.Fs.Open("/testdata/build-input-with-client-version.yaml")
+			file, err := tt.args.m.FileSystem.Fs.Open("/testdata/build-input.yaml")
 			if err != nil {
 				t.FailNow()
 			}
 			tt.args.m.Context.In = file
-			cmd := buildBuildCommand(tt.args.m)
+			cmd := BuildBuildCommand(tt.args.m)
 			cmd.SetArgs([]string{
 				"build",
 			})
 			cmd.Execute()
-			if got := buildBuildCommand(tt.args.m); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("buildBuildCommand() = %v, want %v", got, tt.want)
+			if got := BuildBuildCommand(tt.args.m); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("BuildBuildCommand() = %v, want %v", got, tt.want)
 			}
 		})
 	}

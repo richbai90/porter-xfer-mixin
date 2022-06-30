@@ -1,9 +1,0 @@
-RUN apt-get update && \\
-				 apt-get install jq && \\
-				 docker volume inspect kr > /volume.json && \\
-				 cd $( \\
-					docker inspect $(docker ps -a --filter volume=kr \\
-						| awk '(NR>1) {print $1}' \\
-						| sed 's/ //g') \\
-						| jq '.[0].Mounts[] | select(.Name == \"kr\").Destination \\
-			)' \\ && tar -czvf /backup.tar.gz .

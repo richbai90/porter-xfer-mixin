@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func buildSchemaCommand(m *xfer.Mixin) *cobra.Command {
+func BuildSchemaCommand(m *xfer.Mixin) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "schema",
 		Short: "Print the json schema for the mixin",

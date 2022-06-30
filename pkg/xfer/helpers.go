@@ -1,6 +1,7 @@
 package xfer
 
 import (
+	"fmt"
 	"io"
 	"os"
 	"path"
@@ -11,6 +12,7 @@ import (
 
 	context "get.porter.sh/porter/pkg/portercontext"
 	"github.com/carolynvs/aferox"
+	"github.com/pkg/errors"
 	"github.com/spf13/afero"
 )
 
@@ -28,7 +30,9 @@ func NewTestMixin(t *testing.T) *TestMixin {
 	c := NewContext(context.NewTestContext(t))
 	m := &TestMixin{
 		Mixin: &Mixin{
-			Context: c.Context,
+			ExpandedContext: ExpandedContext{
+				Context: c.Context,
+			},
 		},
 		TestContext: c,
 	}
@@ -109,4 +113,25 @@ func CopyFile(file afero.File, Fs afero.Fs, filepath string) error {
 	}
 
 	return nil
+}
+
+func (m *Mixin) HandleErr(err *error, args ...interface{}) bool {
+	if len(args) == 0 {
+		args = append(args, "")
+	}
+	e := errors.Wrap(*err, fmt.Sprintf(args[0].(string), args...))
+	if m.Context.Debug && e != nil {
+		fmt.Fprintln(os.Stderr, e.Error())
+		*err = e
+		return true
+	}
+
+	return false
+}
+
+func (m *Mixin) PrintDebug(format string, a ...interface{}) {
+	if m.Debug {
+		format = fmt.Sprintf("=== DEBUG ===\n%s\n", format)
+		fmt.Fprintf(os.Stderr, format, a...)
+	}
 }

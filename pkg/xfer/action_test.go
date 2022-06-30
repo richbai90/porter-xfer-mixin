@@ -20,10 +20,6 @@ func TestMixin_UnmarshalStep(t *testing.T) {
 	require.Len(t, action.Steps, 1)
 
 	step := action.Steps[0]
-	assert.Equal(t, "Summon Minion", step.Description)
-	assert.NotEmpty(t, step.Outputs)
-	assert.Equal(t, Output{Name: "VICTORY", JsonPath: "$Id"}, step.Outputs[0])
-
-	require.Len(t, step.Arguments, 1)
-	assert.Equal(t, "man-e-faces", step.Arguments[0])
+	assert.Equal(t, "File Transfer", step.Description)
+	assert.Equal(t, "This will likely work", step.Command)
 }

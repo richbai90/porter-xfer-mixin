@@ -12,7 +12,7 @@ import (
 var commands = make(map[string]*cobra.Command)
 
 func main() {
-	cmd, err := buildRootCommand(os.Stdin)
+	cmd, err := BuildRootCommand(os.Stdin)
 	if err != nil {
 		fmt.Printf("err: %s\n", err)
 		os.Exit(1)
@@ -23,7 +23,7 @@ func main() {
 	}
 }
 
-func buildRootCommand(in io.Reader) (*cobra.Command, error) {
+func BuildRootCommand(in io.Reader) (*cobra.Command, error) {
 	m, err := xfer.New()
 	if err != nil {
 		return nil, err
@@ -36,18 +36,20 @@ func buildRootCommand(in io.Reader) (*cobra.Command, error) {
 			// Enable swapping out stdout/stderr for testing
 			m.Out = cmd.OutOrStdout()
 			m.Err = cmd.OutOrStderr()
+			m.Cmd = cmd
+			m.Ctx = cmd.Context()
 		},
 		SilenceUsage: true,
 	}
 
 	cmd.PersistentFlags().BoolVar(&m.Debug, "debug", false, "Enable debug logging")
-	cmd.AddCommand(buildVersionCommand(m))
-	cmd.AddCommand(buildSchemaCommand(m))
-	cmd.AddCommand(buildBuildCommand(m))
-	cmd.AddCommand(buildInstallCommand(m))
-	cmd.AddCommand(buildInvokeCommand(m))
-	cmd.AddCommand(buildUpgradeCommand(m))
-	cmd.AddCommand(buildUninstallCommand(m))
+	cmd.AddCommand(BuildVersionCommand(m))
+	cmd.AddCommand(BuildSchemaCommand(m))
+	cmd.AddCommand(BuildBuildCommand(m))
+	cmd.AddCommand(BuildInstallCommand(m))
+	cmd.AddCommand(BuildInvokeCommand(m))
+	cmd.AddCommand(BuildUpgradeCommand(m))
+	cmd.AddCommand(BuildUninstallCommand(m))
 
 	return cmd, nil
 }

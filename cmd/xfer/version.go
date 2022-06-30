@@ -6,7 +6,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func buildVersionCommand(m *xfer.Mixin) *cobra.Command {
+func BuildVersionCommand(m *xfer.Mixin) *cobra.Command {
 	opts := version.Options{}
 
 	cmd := &cobra.Command{

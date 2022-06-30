@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func buildUpgradeCommand(m *xfer.Mixin) *cobra.Command {
+func BuildUpgradeCommand(m *xfer.Mixin) *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "upgrade",
 		Short: "Execute the invoke functionality of this mixin",

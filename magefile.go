@@ -1,4 +1,4 @@
-//go:build mage
+// go:build mage
 // +build mage
 
 package main
@@ -20,6 +20,7 @@ var magefile = mixins.NewMagefile(mixinPackage, mixinName, mixinBin)
 
 // Build the mixin
 func Build() {
+
 	magefile.Build()
 }
 

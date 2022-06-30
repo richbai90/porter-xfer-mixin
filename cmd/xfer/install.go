@@ -1,6 +1,8 @@
 package main
 
 import (
+	"os"
+
 	"github.com/richbai90/xfer/pkg/xfer"
 	"github.com/spf13/cobra"
 )
@@ -9,15 +11,22 @@ var (
 	commandFile string
 )
 
-func buildInstallCommand(m *xfer.Mixin) *cobra.Command {
+func BuildInstallCommand(m *xfer.Mixin) *cobra.Command {
+	r, w, _ := os.Pipe()
 	cmd := &cobra.Command{
 		Use:   "install",
 		Short: "Execute the install functionality of this mixin",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
-			//Do something here if needed
+			// Handle debug pipe
+			if _, dbg := os.LookupEnv("debugger"); dbg {
+				w.WriteString("install:\n  - xfer:\n      description: File Transfer\n      destination: /Users/Rich/restore\n")
+				m.Context.In = r
+			}
+			defer w.Close()
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {
+			defer r.Close()
 			return m.Execute()
 		},
 	}

@@ -1,6 +1,8 @@
 package xfer
 
 import (
+	"fmt"
+
 	"get.porter.sh/porter/pkg/exec/builder"
 	yaml "gopkg.in/yaml.v2"
 )
@@ -19,7 +21,16 @@ func (m *Mixin) Execute() error {
 	if err != nil {
 		return err
 	}
-
+	
+	if m.Context.Debug {
+		steps := (*action).Steps
+		for i, s := range steps {
+			fmt.Fprintf(m.Out, "adding debug argument to %s \n", s.Description)
+			s.Arguments = append(s.Arguments, "--debug")
+			// range creates a local var for s and we lose the pointer
+			steps[i].Arguments = s.Arguments
+		}
+	}
 	_, err = builder.ExecuteSingleStepAction(m.Context, action)
 	return err
 }

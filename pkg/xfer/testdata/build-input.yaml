@@ -1,0 +1,13 @@
+config:
+  volume: test
+
+install:
+  - xfer:
+      description: File Transfer
+      destination: /Users/Rich/restore
+
+
+uninstall:
+  - xfer:
+      description: Obligatory uninstall step
+      

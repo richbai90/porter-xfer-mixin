@@ -1,7 +1,9 @@
 package xfer
 
 import (
+	"encoding/json"
 	"fmt"
+	"os"
 
 	"get.porter.sh/porter/pkg/exec/builder"
 )
@@ -41,6 +43,15 @@ func (a *Action) UnmarshalYAML(unmarshal func(interface{}) error) error {
 		a.Name = actionName
 		for _, result := range action {
 			step := result.(*[]Step)
+			if actionName == "install" {
+				// Currently only one step in a xfer action
+				generateInstallSteps(&(*step)[0].Instruction)
+			} else {
+				step = generateVoidSteps(actionName)
+			}
+
+			rawstep, _ := json.Marshal(step)
+			print(string(rawstep))
 			a.Steps = append(a.Steps, *step...)
 		}
 	}
@@ -93,6 +104,9 @@ func (a *Actions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 				Name:  actionName,
 				Steps: *s,
 			})
+
+			rawstep, _ := json.Marshal(s)
+			print(string(rawstep))
 		}
 	}
 	return nil
@@ -107,7 +121,7 @@ type Instruction struct {
 	Command        string   `yaml:"command,omitempty"`
 	Description    string   `yaml:"description"`
 	WorkingDir     string   `yaml:"dir,omitempty"`
-	Destination    string   `yaml:"dest,omitempty"`
+	Destination    string   `yaml:"destination,omitempty"`
 	Outputs        []Output `yaml:"outputs,omitempty"`
 	SuppressOutput bool     `yaml:"suppress-output,omitempty"`
 	Arguments      []string `yaml:"arguments,omitempty"`
@@ -119,7 +133,7 @@ type Instruction struct {
 }
 
 func (s Instruction) GetCommand() string {
-	return "xfer"
+	return s.Command
 }
 
 func (s Instruction) GetWorkingDir() string {
@@ -198,5 +212,5 @@ func generateVoidSteps(stepName string) *[]Step {
 
 func generateInstallSteps(instruction *Instruction) {
 	instruction.Command = "/cnab/app/mixins/xfer/xfer-bin"
-	instruction.Arguments = []string{"restore", "--source", "/backup", "--destination", instruction.Destination}
+	instruction.Arguments = []string{"restore", "--source", os.Getenv("PKGID"), "--dest", instruction.Destination}
 }

@@ -1,7 +1,6 @@
 package xfer
 
 import (
-	"errors"
 	"os"
 	"path"
 
@@ -16,9 +15,14 @@ func Client() (*client.Client, error) {
 	return client.NewClientWithOpts(client.FromEnv)
 }
 
-// Backup the files so they're ready to be extracted later
+// Archive the files if they come from a volume.
+// Must be done pre-build as the volume cannot easily be mounted during build
 func (m *Mixin) PreBuild() error {
 	dcli, err := Client()
+	id := uuid.Generate().String()
+
+	// store the id in a config option so that build can use it during build
+	m.PackageID = id
 	setupDebugInput(m)
 	if m.HandleErr(&err) {
 		return err
@@ -28,21 +32,17 @@ func (m *Mixin) PreBuild() error {
 	if err := PopulateInput(m, &input); err != nil {
 		return err
 	}
-	cfg := input.Config
-	volume, err := sourceVolume(cfg.Source)
-	if m.HandleErr(&err, "Unable to create volume from source %s with value %s", cfg.Source.Kind, cfg.Source.Value) {
-		return err
+	// If the input source is not a volume, it can be handled as part of the docker file definition
+	if input.Config.Source.Kind != Volume {
+		return nil
 	}
+	volume := input.Config.Source.Value
 	m.PrintDebug("Inspecting Provided Volume %s", volume)
 	v, err := dcli.VolumeInspect(m.Ctx, volume)
 
 	if m.HandleErr(&err, "Problem inspecting volume %s: ", volume) {
 		return err
 	}
-
-	id := uuid.Generate().String()
-	// store the id in a private config option so that build can use it later
-	m.PackageID = id
 
 	m.PrintDebug("Package ID: %s", id)
 	m.PrintDebug("Expected Output File: ", path.Join(m.Getwd(), id+".tar.gz"))
@@ -109,43 +109,3 @@ func setupDebugInput(m *Mixin) {
 
 	defer w.Close()
 }
-
-func sourceVolume(src MixinSource) (string, error) {
-	switch src.Kind {
-	case Directory:
-		return makeVolumeFromDirectory(src.Value)
-	case Repo:
-		return makeVolumeFromRepo(src.Value)
-	case URL:
-		return makeVolumeFromURL(src.Value)
-	case Archive:
-		return makeVolumeFromArchive(src.Value)
-	case Volume:
-		return src.Value, nil
-	}
-
-	return "", errors.New("Unknown Value for parameter Source")
-}
-
-func makeVolumeFromDirectory(val string) (string, error) {
-	var v string;
-	var err error;
-	return v, err;
-}
-func makeVolumeFromRepo(val string) (string, error) {
-	var v string;
-	var err error;
-	return v, err;
-}
-func makeVolumeFromURL(val string) (string, error) {
-	var v string;
-	var err error;
-	return v, err;
-}
-func makeVolumeFromArchive(val string) (string, error) {
-	var v string;
-	var err error;
-	return v, err;
-}
-
-

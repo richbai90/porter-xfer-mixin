@@ -18,22 +18,13 @@ func (m *Mixin) Build() error {
 	if m.HandleErr(&err, "Unable to populate input") {
 		return err
 	}
-	
+
 	source := build.Config.Source
 	basedir := "/home/${BUNDLE_USER}"
 
 	archive := fmt.Sprintf("%s.tar.gz", m.PackageID)
 
-	dockerfileLines.WriteStrings(
-		`ENV PKGID /home/${BUNDLE_USER}/`,
-		archive,
-		`
-# make sure that the home directory for nonroot exists
-RUN mkdir -p /home/${BUNDLE_USER} && \
-	chown -R ${BUNDLE_USER}:${BUNDLE_GID} `,
-		basedir,
-		"\n",
-	)
+
 
 	// If the provided source was a volume then everything was done in pre-build so just copy the tar file we know will be there
 	if source.Kind == Volume {

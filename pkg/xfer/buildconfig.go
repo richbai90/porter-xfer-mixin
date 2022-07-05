@@ -7,9 +7,23 @@ import (
 	yaml "gopkg.in/yaml.v2"
 )
 
+type KindType string
+const (
+	Directory  KindType = "DIRECTORY"
+	URL        KindType = "URL"
+	Repo       KindType = "REPO"
+	Volume     KindType = "VOLUME"
+	Archive    KindType = "ARCHIVE"
+)
+
 // BuildInput represents stdin passed to the mixin for the build command.
 type BuildInput struct {
 	Config MixinConfig
+}
+
+type MixinSource struct {
+	Kind KindType `yaml:"kind,omitempty"`
+	Value string  `yaml:"value,omitempty"`
 }
 
 // MixinConfig represents configuration that can be set on the FileTransfer mixin in porter.yaml
@@ -21,12 +35,10 @@ type MixinConfig struct {
 	ClientVersion string `yaml:"clientVersion,omitempty"`
 	// The path on the container to copy the files to if Files is specified
 	Destination string `yaml:"destination,omitempty"`
-	// The files to be copied into the container at build time
-	Files []string `yaml:"files,omitempty"`
-	// The name of a predefined volume to use instead of a file list
-	Volume string `yaml:"volume,omitempty"`
-	// The ID to pass to the chown flag of docker copy
-	Chown int `yaml:"chown,omitempty"`
+	// Source file can be a file path, volume name, or url
+	Source MixinSource `yaml:"source,omitempty"`
+	// Owner ID to use during install
+	Chown string `yaml:"chown,omitempty"`
 }
 
 func PopulateInput(m *Mixin, b *BuildInput) error {

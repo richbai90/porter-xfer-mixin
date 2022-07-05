@@ -1,6 +1,7 @@
 package xfer
 
 import (
+	"errors"
 	"os"
 	"path"
 
@@ -28,10 +29,14 @@ func (m *Mixin) PreBuild() error {
 		return err
 	}
 	cfg := input.Config
-	m.PrintDebug("Inspecting Provided Volume %s", cfg.Volume)
-	v, err := dcli.VolumeInspect(m.Ctx, cfg.Volume)
+	volume, err := sourceVolume(cfg.Source)
+	if m.HandleErr(&err, "Unable to create volume from source %s with value %s", cfg.Source.Kind, cfg.Source.Value) {
+		return err
+	}
+	m.PrintDebug("Inspecting Provided Volume %s", volume)
+	v, err := dcli.VolumeInspect(m.Ctx, volume)
 
-	if m.HandleErr(&err, "Problem inspecting volume %s: ", cfg.Volume) {
+	if m.HandleErr(&err, "Problem inspecting volume %s: ", volume) {
 		return err
 	}
 
@@ -104,3 +109,43 @@ func setupDebugInput(m *Mixin) {
 
 	defer w.Close()
 }
+
+func sourceVolume(src MixinSource) (string, error) {
+	switch src.Kind {
+	case Directory:
+		return makeVolumeFromDirectory(src.Value)
+	case Repo:
+		return makeVolumeFromRepo(src.Value)
+	case URL:
+		return makeVolumeFromURL(src.Value)
+	case Archive:
+		return makeVolumeFromArchive(src.Value)
+	case Volume:
+		return src.Value, nil
+	}
+
+	return "", errors.New("Unknown Value for parameter Source")
+}
+
+func makeVolumeFromDirectory(val string) (string, error) {
+	var v string;
+	var err error;
+	return v, err;
+}
+func makeVolumeFromRepo(val string) (string, error) {
+	var v string;
+	var err error;
+	return v, err;
+}
+func makeVolumeFromURL(val string) (string, error) {
+	var v string;
+	var err error;
+	return v, err;
+}
+func makeVolumeFromArchive(val string) (string, error) {
+	var v string;
+	var err error;
+	return v, err;
+}
+
+

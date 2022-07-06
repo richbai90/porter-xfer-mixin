@@ -9,11 +9,12 @@ import (
 
 type KindType string
 const (
-	Directory  KindType = "DIRECTORY"
-	URL        KindType = "URL"
-	Repo       KindType = "REPO"
-	Volume     KindType = "VOLUME"
-	Archive    KindType = "ARCHIVE"
+	Directory  KindType = "directory"
+	URL        KindType = "url"
+	Repo       KindType = "repo"
+	Volume     KindType = "volume"
+	Archive    KindType = "archive"
+	File       KindType = "file"
 )
 
 // BuildInput represents stdin passed to the mixin for the build command.

@@ -1,6 +1,7 @@
 package xfer
 
 import (
+	"encoding/json"
 	"os/exec"
 
 	"get.porter.sh/porter/pkg/exec/builder"
@@ -8,14 +9,33 @@ import (
 )
 
 type KindType string
+
 const (
-	Directory  KindType = "directory"
-	URL        KindType = "url"
-	Repo       KindType = "repo"
-	Volume     KindType = "volume"
-	Archive    KindType = "archive"
-	File       KindType = "file"
+	Directory KindType = "directory"
+	URL       KindType = "url"
+	Repo      KindType = "repo"
+	Volume    KindType = "volume"
+	Archive   KindType = "archive"
+	File      KindType = "file"
 )
+
+var kindValueToTypeMap = map[string]KindType{
+	"directory": Directory,
+	"url":       URL,
+	"repo":      Repo,
+	"volume":    Volume,
+	"archive":   Archive,
+	"file":      File,
+}
+
+var kindTypeToValueMap = map[KindType]string{
+	Directory: "directory",
+	URL:       "url",
+	Repo:      "repo",
+	Volume:    "volume",
+	Archive:   "archive",
+	File:      "file",
+}
 
 // BuildInput represents stdin passed to the mixin for the build command.
 type BuildInput struct {
@@ -23,8 +43,9 @@ type BuildInput struct {
 }
 
 type MixinSource struct {
-	Kind KindType `yaml:"kind,omitempty"`
-	Value string  `yaml:"value,omitempty"`
+	Kind  KindType `yaml:"kind,omitempty"`
+	Value string   `yaml:"value,omitempty"`
+	As    string   `yaml:"as,omitempty"`
 }
 
 // MixinConfig represents configuration that can be set on the FileTransfer mixin in porter.yaml
@@ -37,9 +58,43 @@ type MixinConfig struct {
 	// The path on the container to copy the files to if Files is specified
 	Destination string `yaml:"destination,omitempty"`
 	// Source file can be a file path, volume name, or url
-	Source MixinSource `yaml:"source,omitempty"`
+	Sources []MixinSource `yaml:"sources,omitempty"`
 	// Owner ID to use during install
 	Chown string `yaml:"chown,omitempty"`
+}
+
+func (k KindType) String() string {
+	return kindTypeToValueMap[k]
+}
+
+func (k KindType) MarshalJSON() ([]byte, error) {
+	return []byte(kindTypeToValueMap[k]), nil
+}
+
+func (k *KindType) UnmarshalJSON(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err != nil {
+		return err
+	}
+
+	*k = kindValueToTypeMap[str]
+	return nil
+}
+
+func (k KindType) MarshalYAML() ([]byte, error) {
+	return []byte(kindTypeToValueMap[k]), nil
+}
+
+func (k *KindType) UnmarshalYAML(b []byte) error {
+	var str string
+	err := json.Unmarshal(b, &str)
+	if err != nil {
+		return err
+	}
+
+	*k = kindValueToTypeMap[str]
+	return nil
 }
 
 func PopulateInput(m *Mixin, b *BuildInput) error {
@@ -69,3 +124,5 @@ func getDockerVersion() string {
 	return string(ver)
 
 }
+
+var Input BuildInput

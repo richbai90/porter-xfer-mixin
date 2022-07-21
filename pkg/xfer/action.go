@@ -97,6 +97,9 @@ func (a *Actions) UnmarshalYAML(unmarshal func(interface{}) error) error {
 			if actionName == "install" {
 				// Currently only one step in a xfer action
 				generateInstallSteps(&(*s)[0].Instruction)
+				for name, data := range (*s)[0].Instruction.TplData {
+					os.Setenv("xfer_tpl_" + name, data)	
+				}
 			} else {
 				s = generateVoidSteps(actionName)
 			}
@@ -125,6 +128,7 @@ type Instruction struct {
 	Outputs        []Output `yaml:"outputs,omitempty"`
 	SuppressOutput bool     `yaml:"suppress-output,omitempty"`
 	Arguments      []string `yaml:"arguments,omitempty"`
+	TplData        map[string]string `yaml:"tpldata,omitempty"`
 
 	// Allow the user to ignore some errors
 	// Adds the ignoreError functionality from the exec mixin
@@ -212,5 +216,5 @@ func generateVoidSteps(stepName string) *[]Step {
 
 func generateInstallSteps(instruction *Instruction) {
 	instruction.Command = "/cnab/app/mixins/xfer/xfer-bin"
-	instruction.Arguments = []string{"restore", "--source", os.Getenv("PKGID"), "--dest", instruction.Destination}
+	instruction.Arguments = []string{"restore", "--source", os.Getenv("PKG"), "--dest", instruction.Destination}
 }

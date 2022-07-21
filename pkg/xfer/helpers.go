@@ -135,3 +135,50 @@ func (m *Mixin) PrintDebug(format string, a ...interface{}) {
 		fmt.Fprintf(os.Stderr, format, a...)
 	}
 }
+
+// Return true if any of the items in the list cause the callback function f to return true when given as a parameter
+func Some(list []interface{}, f func(interface{}, int) bool) bool {
+	for i, iface := range list {
+		if f(iface, i) {
+			return true
+		}
+	}
+
+	return false
+}
+
+// Return the first item in the list that causes the callback function f to return true when given as a parameter
+func Find(list []interface{}, f func(interface{}, int) bool) (interface{}, int) {
+	for i, iface := range list {
+		if f(iface, i) {
+			return iface, i
+		}
+	}
+
+	return nil, -1
+}
+
+func (m *Mixin) HandleErrs(errs []error, args ...interface{}) error {
+	// If we have no errors in the slice no need to do anything else
+	if len(errs) == 0 {
+		return nil
+	}
+	// Create a slice of interfaces that will hold pointers to our errors
+	ifaces := make([]interface{}, len(errs))
+	for i, e := range errs {
+		ifaces[i] = &e
+	}
+	
+	// Search if any of our errors are not nill
+	if err, _ := Find(ifaces, func(err interface{}, _ int) bool {
+		// We know that our err interface is a *error so convert without checking
+		e := err.(*error)
+		// Returns true if e is not nil
+		return m.HandleErr(e, args...)
+	}); err != nil {
+		// Return the found error pointer
+		e := err.(*error)
+		return *e
+	}
+	return nil
+}

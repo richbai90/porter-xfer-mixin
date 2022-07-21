@@ -3,6 +3,8 @@ package xfer
 
 import (
 	"context"
+	"io"
+	"os"
 
 	"get.porter.sh/porter/pkg/portercontext"
 
@@ -15,12 +17,17 @@ type ExpandedContext struct {
 	*portercontext.Context
 	Cmd *cobra.Command
 	Ctx context.Context
+	IO  io.ReadWriteCloser
 }
 
 type Mixin struct {
 	ExpandedContext
 	ClientVersion string
 	PackageID     string
+	Volumes       []string
+	Files         []string
+	Directories   map[string][]string
+	URLs          []URLDetails
 	//add whatever other context/state is needed here
 }
 
@@ -30,5 +37,12 @@ func New() (*Mixin, error) {
 		ExpandedContext: ExpandedContext{Context: portercontext.New()},
 		ClientVersion:   defaultClientVersion,
 	}, nil
+}
 
+func(e *ExpandedContext) Getwd() string {
+	if _, exists := os.LookupEnv("debugger"); exists {
+		return os.Getenv("HostWd")
+	} else {
+		return e.FileSystem.Getwd()
+	}
 }

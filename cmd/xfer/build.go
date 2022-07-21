@@ -19,11 +19,17 @@ func BuildBuildCommand(m *xfer.Mixin) *cobra.Command {
 				// This is strictly for use during debugging sessions
 				defer m.Context.In.(*os.File).Close()
 			}
+			defer cmd.PostRun(cmd, args)
 			return m.Build()
 		},
 		PostRun: func(cmd *cobra.Command, args []string) {
 			// remove the tar file now that it's part of the bundle
-			// m.FileSystem.Remove(path.Join(m.Getwd(), m.PackageID) + "tar.gz")
+			m.PrintDebug(`Cleaning up
+Remove %s`, m.PackageID + ".tar.gz")
+			err := m.FileSystem.Remove(m.PackageID + ".tar.gz")
+			if m.HandleErr(&err, "Warning! Cleanup Failed") {
+				m.PrintDebug(err.Error())
+			}
 		},
 	}
 	return cmd

@@ -1,6 +1,8 @@
 package xfer
 
 import (
+	"errors"
+	"io/fs"
 	"os"
 	"path"
 
@@ -9,34 +11,96 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
+	"github.com/richbai90/xfer/pkg/xfer/testdata"
 )
 
 func Client() (*client.Client, error) {
 	return client.NewClientWithOpts(client.FromEnv)
 }
 
+type URLDetails struct {
+	URL string
+	As string
+}
+
 // Archive the files if they come from a volume.
 // Must be done pre-build as the volume cannot easily be mounted during build
 func (m *Mixin) PreBuild() error {
-	dcli, err := Client()
 	id := uuid.Generate().String()
-
+	m.PrintDebug("Pre Build started")
+	m.PrintDebug("ID: %s", m.PackageID)
 	// store the id in a config option so that build can use it during build
 	m.PackageID = id
 	setupDebugInput(m)
-	if m.HandleErr(&err) {
-		return err
-	}
-	var input BuildInput
 
-	if err := PopulateInput(m, &input); err != nil {
+	if err := PopulateInput(m, &Input); err != nil {
 		return err
 	}
-	// If the input source is not a volume, it can be handled as part of the docker file definition
-	if input.Config.Source.Kind != Volume {
-		return nil
+	var errs []error
+	for _, source := range Input.Config.Sources {
+		switch source.Kind {
+		case Volume:
+			errs = append(errs, m.handleVolumeSource(source.Value))
+			break
+		case URL:
+			errs = append(errs, m.handleURLSource(URLDetails{URL: source.Value, As: source.As}))
+			break
+		case File:
+			errs = append(errs, m.handleFileSource(source.Value))
+			break
+		case Directory:
+			errs = append(errs, m.handleDirSource(source.Value))
+			break
+		default:
+			errs = append(errs, errors.New("Not Implemented"))
+		}
 	}
-	volume := input.Config.Source.Value
+
+	err := m.HandleErrs(errs, "Problem processings sources")
+	return err
+}
+
+func setupDebugInput(m *Mixin) {
+	r, w, _ := os.Pipe()
+	if _, dbg := os.LookupEnv("debugger"); dbg {
+		m.IO = w
+		w.WriteString(testdata.BuildInput)
+		m.Context.In = r
+	} else {
+		m.IO = os.Stdin
+	}
+
+	defer w.Close()
+}
+
+func (m *Mixin) handleURLSource(dets URLDetails) error {
+	m.URLs = append(m.URLs, dets)
+	return nil
+}
+
+func (m *Mixin) handleFileSource(file string) error {
+	m.Files = append(m.Files, file)
+	return nil
+}
+
+func (m *Mixin) handleDirSource(dir string) error {
+	if m.Directories == nil {
+		m.Directories = make(map[string][]string)
+	}
+	err := m.FileSystem.Walk(dir, func(path string, info fs.FileInfo, err error) error {
+		m.Directories[dir] = append(m.Directories[dir], path)
+		return nil
+	})
+
+	return err
+}
+
+func (m *Mixin) handleVolumeSource(volume string) error {
+	dcli, err := Client()
+	if err != nil {
+		return err
+	}
+	volid := uuid.Generate().String()
 	m.PrintDebug("Inspecting Provided Volume %s", volume)
 	v, err := dcli.VolumeInspect(m.Ctx, volume)
 
@@ -44,10 +108,18 @@ func (m *Mixin) PreBuild() error {
 		return err
 	}
 
-	m.PrintDebug("Package ID: %s", id)
-	m.PrintDebug("Expected Output File: ", path.Join(m.Getwd(), id+".tar.gz"))
+	m.PrintDebug("Package ID: %s", volid)
+	m.PrintDebug("Expected Output File: ", path.Join(m.Getwd(), volid+".tar.gz"))
 
-	cmd := []string{`/bin/sh`, `-c`, `cd /src && tar -czvf /dest/` + id + `.tar.gz .`}
+	cmd := []string{`/bin/sh`, `-c`, `cd /src && tar -czvf /dest/` + volid + `.tar.gz .`}
+
+	m.PrintDebug("Pulling debian image")
+	reader, err := dcli.ImagePull(m.Ctx, "debian:latest", types.ImagePullOptions{})
+	defer reader.Close()
+	if m.HandleErr(&err, "Problem pulling docker image debian:latest") {
+		return err;
+	}
+
 	backupConfig := container.Config{
 		AttachStderr: true,
 		Cmd:          cmd,
@@ -63,9 +135,10 @@ func (m *Mixin) PreBuild() error {
 				ReadOnly: true,
 			},
 			{
-				Type:   "bind",
+				Type: "bind",
 				Source: m.Getwd(),
 				Target: "/dest",
+				ReadOnly: false,
 			},
 		}}
 	m.PrintDebug("Starting xfer container")
@@ -96,16 +169,6 @@ func (m *Mixin) PreBuild() error {
 		return err
 	}
 
+	m.Volumes = append(m.Volumes, volid+".tar.gz")
 	return nil
-}
-
-func setupDebugInput(m *Mixin) {
-	r, w, _ := os.Pipe()
-	input := "config:\n  volume: test\nactions:\n  install:\n    - xfer:\n        description: File Transfer\n        destination: /Users/Rich/restore\n  uninstall:\n    - xfer:\n        description: Obligatory uninstall step\n  upgrade: []\n"
-	if _, dbg := os.LookupEnv("debugger"); dbg {
-		w.WriteString(input)
-		m.Context.In = r
-	}
-
-	defer w.Close()
 }

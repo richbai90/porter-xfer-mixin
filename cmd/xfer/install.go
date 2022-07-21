@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strings"
 
 	"github.com/richbai90/xfer/pkg/xfer"
 	"github.com/spf13/cobra"
@@ -21,6 +22,8 @@ func BuildInstallCommand(m *xfer.Mixin) *cobra.Command {
 			if _, dbg := os.LookupEnv("debugger"); dbg {
 				w.WriteString("install:\n  - xfer:\n      description: File Transfer\n      destination: /Users/Rich/restore\n")
 				m.Context.In = r
+			} else if dbg, _ := cmd.Flags().GetBool("debug"); dbg {
+				m.PrintDebug("%s", strings.Join(args, " "))
 			}
 			defer w.Close()
 			return nil
